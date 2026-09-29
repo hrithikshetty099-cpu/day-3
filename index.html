@@ -61,18 +61,18 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 0.98;
+        renderer.toneMappingExposure = 0.94;
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100);
         camera.position.set(0, 0, 11.4);
 
-        const ambient = new THREE.HemisphereLight(0xdde9ef, 0x2d4148, 1.0);
+        const ambient = new THREE.HemisphereLight(0xdde9ef, 0x2d4148, 0.82);
         scene.add(ambient);
-        const sunlight = new THREE.DirectionalLight(0xfff2da, 2.0);
+        const sunlight = new THREE.DirectionalLight(0xfff2da, 1.75);
         sunlight.position.set(-4, 4, 8);
         scene.add(sunlight);
-        const rimLight = new THREE.DirectionalLight(0x70c9cf, 1.15);
+        const rimLight = new THREE.DirectionalLight(0x70c9cf, 1.0);
         rimLight.position.set(4, -1, -4);
         scene.add(rimLight);
 
@@ -82,7 +82,7 @@
         textureLoader.crossOrigin = 'anonymous';
         const earthTexture = textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg');
         earthTexture.encoding = THREE.sRGBEncoding;
-        const earthMaterial = new THREE.MeshPhongMaterial({ map: earthTexture, shininess: 32, specular: new THREE.Color(0x18252b) });
+        const earthMaterial = new THREE.MeshPhongMaterial({ map: earthTexture, shininess: 13, specular: new THREE.Color(0x263d48) });
         const earth = new THREE.Mesh(earthGeometry, earthMaterial);
         earth.rotation.y = -0.5;
         earthGroup.add(earth);
@@ -218,7 +218,6 @@
           earthGroup.rotation.z = 0;
           document.querySelector('#impact-copy').textContent = 'IMPACT ZONE';
           document.querySelector('#kick-button').disabled = false;
-          positionScene();
         }
 
         document.querySelector('#enter-arena').addEventListener('click', () => setScreen(true));
