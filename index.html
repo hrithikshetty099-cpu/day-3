@@ -3,9 +3,288 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Name</title>
+    <meta name="theme-color" content="#eef1eb" />
+    <title>ARES / The World Is His</title>
+    <link rel="stylesheet" href="index.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   </head>
   <body>
-    <h1>Your Name</h1>
+    <canvas id="world-canvas" aria-label="A rotating 3D globe and Ares"></canvas>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="wordmark" href="#home" aria-label="Ares home"><span class="wordmark-mark">A</span><span>ARES<span class="wordmark-divider">/</span>WORLD</span></a>
+      <div class="topbar-center"><span class="live-dot"></span> A STUDY IN MOMENTUM</div>
+      <a class="topbar-index" href="#arena"><span>01</span> / 02</a>
+    </header>
+
+    <main>
+      <section class="screen intro-screen active" id="home" aria-labelledby="intro-title">
+        <div class="intro-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> A MYTH, REIMAGINED</p>
+          <h1 id="intro-title">The world<br />is <em>his.</em></h1>
+          <p class="intro-description">Ares has found a new arena. One small step for a god. One rather large problem for Earth.</p>
+          <button class="enter-button" id="enter-arena" type="button"><span>Enter the arena</span><span class="button-arrow" aria-hidden="true">↗</span></button>
+          <p class="intro-footnote"><span class="footnote-star">✳</span> Best viewed with sound off. Definitely.</p>
+        </div>
+        <div class="globe-caption"><span class="caption-index">FIG. 01</span><span>THE BLUE MARBLE</span><span class="caption-coordinate">28° N&nbsp; 86° E</span></div>
+        <div class="orbit-label orbit-label-top"><span class="orbit-label-dot"></span> EARTH / 01</div>
+        <div class="orbit-label orbit-label-bottom">ROTATION <span>23H 56M 04S</span></div>
+        <div class="intro-scroll" aria-hidden="true"><span></span> SCROLL TO WONDER</div>
+      </section>
+
+      <section class="screen arena-screen" id="arena" aria-labelledby="arena-title" aria-hidden="true">
+        <div class="arena-heading">
+          <p class="eyebrow"><span class="eyebrow-line"></span> THE GOD OF WAR, ON TOUR</p>
+          <h2 id="arena-title">A little<br /><em>perspective.</em></h2>
+          <p class="arena-description">He came. He saw. He really should have stretched first.</p>
+        </div>
+        <div class="ares-label"><span class="label-rule"></span><span>ARES</span><small>GOD OF WAR</small></div>
+        <div class="impact-label" id="impact-label" aria-live="polite"><span class="impact-cross">+</span> <span id="impact-copy">IMPACT ZONE</span></div>
+        <div class="arena-controls">
+          <button class="kick-button" id="kick-button" type="button"><span class="kick-icon" aria-hidden="true">↗</span><span>KICK THE GLOBE</span></button>
+          <button class="reset-button" id="reset-button" type="button" aria-label="Reset the scene" title="Reset scene">↺</button>
+        </div>
+        <p class="arena-note"><span class="live-dot"></span> SIMULATION ACTIVE <span class="note-separator">/</span> GRAVITY: QUESTIONABLE</p>
+        <button class="back-button" id="back-home" type="button"><span aria-hidden="true">←</span> BACK TO EARTH</button>
+        <div class="arena-coordinates"><span>MISSION 001</span><span>THE BLUE MARBLE</span></div>
+      </section>
+    </main>
+
+    <footer class="bottom-bar"><span>AN UNREASONABLY LARGE INTERVENTION</span><span class="bottom-center">EST. SINCE THE BEGINNING</span><span>MADE OF STARDUST &amp; BAD IDEAS&nbsp; ✳</span></footer>
+
+    <script>
+      (() => {
+        const canvas = document.querySelector('#world-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 0.98;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 11.4);
+
+        const ambient = new THREE.HemisphereLight(0xdde9ef, 0x2d4148, 1.0);
+        scene.add(ambient);
+        const sunlight = new THREE.DirectionalLight(0xfff2da, 2.0);
+        sunlight.position.set(-4, 4, 8);
+        scene.add(sunlight);
+        const rimLight = new THREE.DirectionalLight(0x70c9cf, 1.15);
+        rimLight.position.set(4, -1, -4);
+        scene.add(rimLight);
+
+        const earthGroup = new THREE.Group();
+        const earthGeometry = new THREE.SphereGeometry(1.78, 96, 96);
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.crossOrigin = 'anonymous';
+        const earthTexture = textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg');
+        earthTexture.encoding = THREE.sRGBEncoding;
+        const earthMaterial = new THREE.MeshPhongMaterial({ map: earthTexture, shininess: 32, specular: new THREE.Color(0x18252b) });
+        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+        earth.rotation.y = -0.5;
+        earthGroup.add(earth);
+
+        const cloudTexture = textureLoader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png');
+        const cloudMaterial = new THREE.MeshPhongMaterial({ map: cloudTexture, transparent: true, opacity: 0.22, depthWrite: false });
+        const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.805, 72, 72), cloudMaterial);
+        earthGroup.add(clouds);
+
+        const atmosphere = new THREE.Mesh(
+          new THREE.SphereGeometry(1.92, 72, 72),
+          new THREE.ShaderMaterial({
+            vertexShader: 'varying vec3 vNormal; void main(){ vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+            fragmentShader: 'varying vec3 vNormal; void main(){ float rim = pow(0.66 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 4.0); gl_FragColor = vec4(0.30, 0.75, 0.90, max(0.0, rim) * 0.62); }',
+            blending: THREE.AdditiveBlending,
+            side: THREE.BackSide,
+            transparent: true,
+            depthWrite: false
+          })
+        );
+        earthGroup.add(atmosphere);
+        scene.add(earthGroup);
+
+        const starPositions = [];
+        for (let index = 0; index < 520; index += 1) {
+          starPositions.push((Math.random() - 0.5) * 32, (Math.random() - 0.5) * 20, -5 - Math.random() * 12);
+        }
+        const starGeometry = new THREE.BufferGeometry();
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+        const stars = new THREE.Points(starGeometry, new THREE.PointsMaterial({ color: 0x496873, size: 0.018, transparent: true, opacity: 0.58 }));
+        scene.add(stars);
+
+        const ares = new THREE.Group();
+        ares.visible = false;
+        scene.add(ares);
+        const armor = new THREE.MeshStandardMaterial({ color: 0x263638, roughness: 0.38, metalness: 0.72 });
+        const darkArmor = new THREE.MeshStandardMaterial({ color: 0x131f22, roughness: 0.55, metalness: 0.6 });
+        const bronze = new THREE.MeshStandardMaterial({ color: 0xb57b47, roughness: 0.42, metalness: 0.7 });
+        const red = new THREE.MeshStandardMaterial({ color: 0x963f31, roughness: 0.78, side: THREE.DoubleSide });
+        const skin = new THREE.MeshStandardMaterial({ color: 0x986950, roughness: 0.84 });
+        const eyes = new THREE.MeshStandardMaterial({ color: 0xf1a04b, emissive: 0xc65725, emissiveIntensity: 0.5 });
+        const addShape = (parent, geometry, material, position, scale, rotation) => {
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(...position);
+          if (scale) mesh.scale.set(...scale);
+          if (rotation) mesh.rotation.set(...rotation);
+          parent.add(mesh);
+          return mesh;
+        };
+        const cylinderBetween = (parent, start, end, radius, material, radialSegments = 10) => {
+          const a = new THREE.Vector3(...start);
+          const b = new THREE.Vector3(...end);
+          const direction = new THREE.Vector3().subVectors(b, a);
+          const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.76, radius, direction.length(), radialSegments), material);
+          mesh.position.copy(a).add(b).multiplyScalar(0.5);
+          mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+          parent.add(mesh);
+          return mesh;
+        };
+
+        addShape(ares, new THREE.ConeGeometry(0.54, 0.72, 5), red, [-0.05, -0.52, -0.28], [1.2, 1, 0.7], [0, 0, Math.PI]);
+        addShape(ares, new THREE.CylinderGeometry(0.31, 0.48, 0.25, 8), bronze, [0, -0.06, 0]);
+        addShape(ares, new THREE.CylinderGeometry(0.35, 0.31, 0.66, 8), armor, [0, 0.39, 0]);
+        addShape(ares, new THREE.SphereGeometry(0.36, 18, 12), armor, [0, 0.79, 0.04], [1, 0.93, 0.83]);
+        addShape(ares, new THREE.SphereGeometry(0.27, 18, 16), skin, [0, 1.18, 0.08], [0.88, 1.08, 0.83]);
+        addShape(ares, new THREE.SphereGeometry(0.33, 16, 10), bronze, [0, 1.39, 0.02], [1, 0.43, 0.91]);
+        addShape(ares, new THREE.ConeGeometry(0.13, 0.5, 5), bronze, [-0.29, 1.68, -0.01], [1, 1, 0.7], [0, 0, 0.22]);
+        addShape(ares, new THREE.ConeGeometry(0.13, 0.5, 5), bronze, [0.29, 1.68, -0.01], [1, 1, 0.7], [0, 0, -0.22]);
+        addShape(ares, new THREE.BoxGeometry(0.105, 0.045, 0.04), eyes, [-0.105, 1.19, 0.294], null, [0, 0, 0.16]);
+        addShape(ares, new THREE.BoxGeometry(0.105, 0.045, 0.04), eyes, [0.105, 1.19, 0.294], null, [0, 0, -0.16]);
+        for (const side of [-1, 1]) {
+          addShape(ares, new THREE.SphereGeometry(0.18, 12, 10), bronze, [side * 0.39, 0.68, 0], [1, 0.8, 0.82]);
+          cylinderBetween(ares, [side * 0.43, 0.57, 0], [side * 0.55, 0.11, 0.03], 0.13, armor);
+          addShape(ares, new THREE.SphereGeometry(0.14, 12, 10), darkArmor, [side * 0.55, 0.08, 0.03]);
+          cylinderBetween(ares, [side * 0.55, 0.05, 0.03], [side * 0.47, -0.49, 0.06], 0.115, armor);
+          addShape(ares, new THREE.SphereGeometry(0.14, 12, 10), bronze, [side * 0.47, -0.46, 0.06], [1, 0.72, 1]);
+        }
+        const kickLeg = new THREE.Group();
+        kickLeg.position.set(-0.2, -0.58, 0.08);
+        ares.add(kickLeg);
+        cylinderBetween(kickLeg, [0, 0, 0], [0, -0.43, 0], 0.19, armor, 12);
+        addShape(kickLeg, new THREE.SphereGeometry(0.16, 12, 10), bronze, [0, -0.41, 0.01]);
+        cylinderBetween(kickLeg, [0, -0.43, 0], [0, -0.86, 0.02], 0.12, darkArmor, 12);
+        addShape(kickLeg, new THREE.ConeGeometry(0.13, 0.4, 8), armor, [0.12, -0.91, 0.1], [1.2, 0.6, 1.5], [0, 0, Math.PI / 2]);
+        ares.userData.kickLeg = kickLeg;
+        ares.position.set(-2.8, -1.43, 0.45);
+        ares.scale.setScalar(0.92);
+
+        const introScreen = document.querySelector('.intro-screen');
+        const arenaScreen = document.querySelector('.arena-screen');
+        let isArena = false;
+        let kickStart = null;
+        let impactTime = null;
+        let globeOffset = 0;
+        let kickCount = 0;
+
+        const setScreen = (arena) => {
+          isArena = arena;
+          introScreen.classList.toggle('active', !arena);
+          arenaScreen.classList.toggle('active', arena);
+          introScreen.setAttribute('aria-hidden', String(arena));
+          arenaScreen.setAttribute('aria-hidden', String(!arena));
+          ares.visible = arena;
+          document.body.classList.toggle('in-arena', arena);
+          if (!arena) resetScene();
+          else positionScene();
+        };
+
+        function positionScene() {
+          const mobile = window.innerWidth < 720;
+          camera.position.z = mobile ? 13.6 : 11.4;
+          camera.fov = mobile ? 41 : 36;
+          camera.updateProjectionMatrix();
+          if (isArena) {
+            earthGroup.position.set(mobile ? 0.75 : 2.15, mobile ? -1.25 : -0.08, 0);
+            earthGroup.scale.setScalar(mobile ? 0.72 : 1);
+            ares.position.set(mobile ? -1.55 : -2.8, mobile ? -2.65 : -1.43, 0.45);
+            ares.scale.setScalar(mobile ? 0.63 : 0.92);
+          } else {
+            earthGroup.position.set(mobile ? 0.42 : 1.8, mobile ? -1.25 : -0.04, 0);
+            earthGroup.scale.setScalar(mobile ? 0.74 : 1);
+            ares.position.set(-2.8, -1.43, 0.45);
+            ares.scale.setScalar(0.92);
+          }
+        }
+
+        function resetScene() {
+          kickStart = null;
+          impactTime = null;
+          globeOffset = 0;
+          kickLeg.rotation.z = 0;
+          ares.position.x = window.innerWidth < 720 ? -1.55 : -2.8;
+          earthGroup.rotation.z = 0;
+          document.querySelector('#impact-copy').textContent = 'IMPACT ZONE';
+          document.querySelector('#kick-button').disabled = false;
+          positionScene();
+        }
+
+        document.querySelector('#enter-arena').addEventListener('click', () => setScreen(true));
+        document.querySelector('#back-home').addEventListener('click', () => setScreen(false));
+        document.querySelector('#reset-button').addEventListener('click', resetScene);
+        document.querySelector('#kick-button').addEventListener('click', () => {
+          if (kickStart !== null) return;
+          kickCount += 1;
+          kickStart = performance.now();
+          document.querySelector('#kick-button').disabled = true;
+          document.querySelector('#impact-copy').textContent = 'INCOMING';
+        });
+
+        window.addEventListener('resize', () => {
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          camera.aspect = window.innerWidth / window.innerHeight;
+          positionScene();
+        });
+
+        positionScene();
+        const clock = new THREE.Clock();
+        function render() {
+          requestAnimationFrame(render);
+          const elapsed = clock.getElapsedTime();
+          earth.rotation.y += 0.0018;
+          clouds.rotation.y += 0.0021;
+          stars.rotation.z = Math.sin(elapsed * 0.04) * 0.003;
+          if (kickStart !== null) {
+            const progress = (performance.now() - kickStart) / 1000;
+            if (progress < 0.48) {
+              const run = Math.sin(Math.min(progress / 0.48, 1) * Math.PI * 0.5);
+              ares.position.x = (window.innerWidth < 720 ? -1.55 : -2.8) + run * 0.31;
+              kickLeg.rotation.z = -0.14 - Math.sin(progress * 18) * 0.18;
+            } else if (progress < 0.82) {
+              const kickProgress = Math.min((progress - 0.48) / 0.34, 1);
+              kickLeg.rotation.z = -0.2 - Math.sin(kickProgress * Math.PI) * 1.36;
+              if (impactTime === null && progress > 0.68) {
+                impactTime = performance.now();
+                document.querySelector('#impact-copy').textContent = 'CONTACT';
+                earthGroup.rotation.z += 0.42;
+                globeOffset = 1.15;
+              }
+            } else {
+              kickLeg.rotation.z += (0 - kickLeg.rotation.z) * 0.08;
+              ares.position.x += ((window.innerWidth < 720 ? -1.55 : -2.8) - ares.position.x) * 0.035;
+              if (progress > 1.3 && document.querySelector('#impact-copy').textContent === 'CONTACT') {
+                document.querySelector('#impact-copy').textContent = 'ORBITAL DEVIATION: +1';
+              }
+              if (progress > 2.25) {
+                kickStart = null;
+                document.querySelector('#kick-button').disabled = false;
+              }
+            }
+          } else if (!isArena) {
+            earthGroup.rotation.z = Math.sin(elapsed * 0.17) * 0.008;
+          }
+          if (globeOffset > 0) {
+            earthGroup.position.x += globeOffset * 0.025;
+            globeOffset *= 0.965;
+            if (globeOffset < 0.018) globeOffset = 0;
+          }
+          renderer.render(scene, camera);
+        }
+        render();
+      })();
+    </script>
   </body>
 </html>
